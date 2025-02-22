@@ -21,3 +21,22 @@ df.columns = df.columns.str.strip()
 print("✅ Loaded dataset with columns:", df.columns)
 print(df.head())
 
+# Ensure the target column exists
+if "diabetes" not in df.columns:
+    raise ValueError("❌ 'diabetes' column is missing from the dataset! Check for typos or incorrect column names.")
+
+# Split features and target variable
+X = df.drop(columns=["diabetes"])
+y = df["diabetes"]
+
+# Identify categorical & numerical features
+categorical_features = ["gender", "smoking_history"]
+numerical_features = ["age", "hypertension", "heart_disease", "bmi", "hbA1c_level", "blood_glucose_level"]
+
+# Preprocessing pipeline
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", StandardScaler(), numerical_features),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features)
+    ]
+)
