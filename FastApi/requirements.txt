@@ -1,8 +1,4 @@
-wq
- HEAD
 pandas==2.2.3
 joblib==1.4.2
 scikit-learn==1.6.1
 
-
- 57fc3147dd321b58c666043e34e354315a6f0a6e
