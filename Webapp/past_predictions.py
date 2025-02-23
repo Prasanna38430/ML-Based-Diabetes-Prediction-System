@@ -19,3 +19,17 @@ if st.button("Get Past Predictions"):
             if not response.text.strip():
                 st.error("The response from the API is empty.")
                 st.stop()  # Stop the execution here
+                if response.status_code == 200:
+                # Handle JSON response format from the API
+                data = response.json()
+                if "past_predictions" in data and isinstance(data["past_predictions"], list):
+                    past_predictions_df = pd.DataFrame(data["past_predictions"])
+
+                    if not past_predictions_df.empty:
+                        st.write("Past Predictions:")
+                        st.dataframe(past_predictions_df)
+                        st.download_button(
+                            label="Download Past Predictions as CSV",
+                            data=past_predictions_df.to_csv(index=False).encode('utf-8'),
+                            file_name='past_predictions.csv',
+                            mime='text/csv'
