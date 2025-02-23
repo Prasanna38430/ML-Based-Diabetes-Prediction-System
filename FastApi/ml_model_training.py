@@ -40,3 +40,9 @@ preprocessor = ColumnTransformer(
         ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features)
     ]
 )
+
+# Define model pipeline
+pipeline = Pipeline([
+    ("preprocessor", preprocessor),
+    ("classifier", RandomForestClassifier(n_estimators=100, random_state=42))
+])
