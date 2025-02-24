@@ -46,3 +46,21 @@ pipeline = Pipeline([
     ("preprocessor", preprocessor),
     ("classifier", RandomForestClassifier(n_estimators=100, random_state=42))
 ])
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train the model
+pipeline.fit(X_train, y_train)
+
+# Make predictions
+y_pred = pipeline.predict(X_test)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+# Save the trained model
+joblib.dump(pipeline, "diabetes_model.pkl")
+
+print(f"✅ Model trained and saved successfully as 'diabetes_model.pkl'! 🎉")
+print(f"📊 Model Accuracy: {accuracy:.4f} (or {accuracy * 100:.2f}%)")
