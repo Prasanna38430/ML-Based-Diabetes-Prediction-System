@@ -33,3 +33,12 @@ if st.button("Get Past Predictions"):
                             data=past_predictions_df.to_csv(index=False).encode('utf-8'),
                             file_name='past_predictions.csv',
                             mime='text/csv'
+                            )
+                    else:
+                        st.warning("No past predictions found for the selected date range and source.")
+                else:
+                    st.error("Unexpected response format")
+            else:
+                st.error(f"Failed to get a valid response from the API. Status code: {response.status_code}")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
