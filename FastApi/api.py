@@ -74,3 +74,19 @@ def insert_predictions_to_db(df: pd.DataFrame, predictions: List[str], source: s
     finally:
         cursor.close()
         connection_pool.putconn(conn)  # Return the connection to the pool
+        
+@app.post("/predict")
+def predict(request: PredictionRequest, background_tasks: BackgroundTasks):
+    try:
+        # Convert input data to DataFrame
+        df = pd.DataFrame(request.data)
+        if df.empty:
+            raise ValueError("No data provided for prediction.")
+        
+        # Check if all required columns are present
+        required_columns = ["gender", "age", "heart_disease", "smoking_history", "hbA1c_level", "hypertension", "blood_glucose_level", "bmi"]
+        for col in required_columns:
+            if col not in df.columns:
+                raise ValueError(f"Missing required column: {col}")
+        
+        
