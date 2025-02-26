@@ -74,3 +74,9 @@ def insert_predictions_to_db(df: pd.DataFrame, predictions: List[str], source: s
     finally:
         cursor.close()
         connection_pool.putconn(conn)  # Return the connection to the pool
+
+@app.get("/past-predictions")
+def get_past_predictions(start_date: date, end_date: date, source: str, page: int = 1, limit: int = None):
+    """Retrieve past predictions with error handling and dynamic limit."""
+    if source not in ["All", "Scheduled Predictions", "Webapp Predictions"]:
+        raise HTTPException(status_code=400, detail="Invalid source provided.")
