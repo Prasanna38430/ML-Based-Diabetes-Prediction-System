@@ -27,3 +27,50 @@ def load_model():
     except FileNotFoundError:
         logging.error("Model file not found. Ensure 'diabetes_pipeline.pkl' is present.")
         raise HTTPException(status_code=500, detail="Model file not found. Please contact the administrator.")
+# Database connection pool setup
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set.")
+connection_pool = pool.SimpleConnectionPool(1, 10, DATABASE_URL)
+
+# Define the request schema for prediction
+class PredictionRequest(BaseModel):
+    data: List[dict]
+
+# Utility function to get database connection
+def get_db_connection():
+    try:
+        conn = connection_pool.getconn()
+        if conn is None:
+            raise HTTPException(status_code=500, detail="Database connection pool exhausted.")
+        return conn
+    except DatabaseError as e:
+        logging.error(f"Database connection error: {e}")
+        raise HTTPException(status_code=500, detail="Database connection failed.")
+    
+def insert_predictions_to_db(df: pd.DataFrame, predictions: List[str], source: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for index, row in df.iterrows():
+            cursor.execute(
+                """
+                INSERT INTO predictions (gender, age, heart_disease, smoking_history, hbA1c_level, hypertension, blood_glucose_level, bmi, diabetes_prediction, source, prediction_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    row['gender'], row['age'], row['heart_disease'], row['smoking_history'],
+                    row['hbA1c_level'], row['hypertension'], row['blood_glucose_level'],
+                    row['bmi'], predictions[index], source, pd.Timestamp.now()
+                )
+            )
+
+        conn.commit()
+    except DatabaseError as e:
+        logging.error(f"Database insertion error: {e}")
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Error saving predictions to the database: {str(e)}")
+    finally:
+        cursor.close()
+        connection_pool.putconn(conn)  # Return the connection to the pool
