@@ -1,4 +1,8 @@
 pandas==2.2.3
 joblib==1.4.2
 scikit-learn==1.6.1
+dotenv==1.0.1
+fastapi==0.115.8
+pydantic==2.10.6
+pandas==2.2.3
 
