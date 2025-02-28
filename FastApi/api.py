@@ -77,6 +77,7 @@ def insert_predictions_to_db(df: pd.DataFrame, predictions: List[str], source: s
         
 @app.post("/predict")
 def predict(request: PredictionRequest, background_tasks: BackgroundTasks):
+    
     try:
         # Convert input data to DataFrame
         df = pd.DataFrame(request.data)
@@ -89,4 +90,23 @@ def predict(request: PredictionRequest, background_tasks: BackgroundTasks):
             if col not in df.columns:
                 raise ValueError(f"Missing required column: {col}")
         
+        # Make prediction
+        predictions = model.predict(df)
+        diabetes_prediction = ["Yes" if pred == 1 else "No" for pred in predictions]
         
+        # Add prediction to the DataFrame
+        df['diabetes_prediction'] = diabetes_prediction
+        
+        # Store predictions asynchronously
+        background_tasks.add_task(insert_predictions_to_db, df, diabetes_prediction, "Webapp Predictions")
+        
+        # Convert the DataFrame to CSV and return as a response
+        output = io.StringIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
+        
+        return Response(content=output.getvalue(), media_type="text/csv")
+    
+    except Exception as e:
+        logging.error(f"Error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error.")
