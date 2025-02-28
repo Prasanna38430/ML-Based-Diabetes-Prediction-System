@@ -41,4 +41,4 @@ if st.button("Get Past Predictions"):
             else:
                 st.error(f"Failed to get a valid response from the API. Status code: {response.status_code}")
         except Exception as e:
-            st.error(f"Error: {str(e)}")
+            st.error(f"Error: {str(e)}")  
