@@ -51,7 +51,12 @@ if page == "Prediction":
         features = get_feature_inputs()
         if st.button("Predict"):
             try:
-                response = requests.post(PREDICTION_API_URL, json={"data": [features]})
+                headers = {"X-Request-Source": "Webapp Predictions"}
+                response = requests.post(
+                    PREDICTION_API_URL,
+                    json={"data": [features]},
+                    headers=headers
+                )
                 
                 # Check if the response is empty
                 if not response.text.strip():
@@ -104,7 +109,8 @@ if page == "Prediction":
                 data_payload = df.to_dict(orient="records")
                 if st.button("Predict Multiple"):
                     try:
-                        response = requests.post(PREDICTION_API_URL, json={"data": data_payload})
+                        headers = {"X-Request-Source": "Webapp Predictions"}
+                        response = requests.post(PREDICTION_API_URL,json={"data": data_payload},headers=headers)
 
                         # Check if the response is empty
                         if not response.text.strip():
