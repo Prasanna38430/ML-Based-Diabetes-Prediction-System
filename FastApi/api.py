@@ -1,7 +1,7 @@
 import datetime
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Response
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Response, Header
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import pandas as pd
 import joblib
 import logging
@@ -77,7 +77,7 @@ def insert_predictions_to_db(df: pd.DataFrame, predictions: List[str], source: s
 
         
 @app.post("/predict")
-def predict(request: PredictionRequest, background_tasks: BackgroundTasks):
+def predict(request: PredictionRequest,background_tasks: BackgroundTasks,x_request_source: Optional[str] = Header(default="Webapp Predictions")):
     
     try:
         # Convert input data to DataFrame
@@ -99,7 +99,7 @@ def predict(request: PredictionRequest, background_tasks: BackgroundTasks):
         df['diabetes_prediction'] = diabetes_prediction
         
         # Store predictions asynchronously
-        background_tasks.add_task(insert_predictions_to_db, df, diabetes_prediction, "Webapp Predictions")
+        background_tasks.add_task(insert_predictions_to_db, df, diabetes_prediction, x_request_source)
         
         # Convert the DataFrame to CSV and return as a response
         output = io.StringIO()
