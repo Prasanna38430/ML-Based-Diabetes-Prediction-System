@@ -23,9 +23,9 @@ load_dotenv()
 def load_model():
     global model
     try:
-        model = joblib.load("diabetes_model.pkl")  # Fixed filename
+        model = joblib.load("diabetes_ml_model.pkl")  # Fixed filename
     except FileNotFoundError:
-        logging.error("Model file not found. Ensure 'diabetes_pipeline.pkl' is present.")
+        logging.error("Model file not found. Ensure 'diabetes_ml_model.pkl' is present.")
         raise HTTPException(status_code=500, detail="Model file not found. Please contact the administrator.")
 # Database connection pool setup
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -134,7 +134,7 @@ def get_past_predictions(start_date: date, end_date: date, source: str, page: in
 
         # Adjust query based on source
         if source == "Scheduled Predictions":
-            query += " AND source = 'airflow'"
+            query += " AND source = 'Scheduled Predictions'"
         elif source == "Webapp Predictions":
             query += " ORDER BY prediction_date DESC"
 
