@@ -1,4 +1,4 @@
-# Dsp-ML-Based-Daibetes-App-Project-G1
+# Dsp-ML-Based-Daibetes-App-Project
 
 # Project Setup
 
@@ -25,6 +25,7 @@ The project aims to:
 6. **Data Ingestion Pipeline**: Moves data from the raw folder to the good folder after validation.
 7. **Docker**: The entire setup is containerized using Docker to provide easy deployment.
 
+### Installation and Setup
 ## Prerequisites
 
 Make sure you have the following installed on your machine:
@@ -33,3 +34,20 @@ Make sure you have the following installed on your machine:
 - **Docker Compose**: [Docker Compose Installation Guide](https://docs.docker.com/compose/install/)
 - **Python 3.8+** (for running notebooks and scripts outside of Docker containers)
 - **Git**: To clone the repository
+-  Apache Airflow
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Prasanna38430/Dsp-ML-Based-Daibetes-App-Project-G1.git
+```
+
+### Step 2: Start Services with Docker Compose
+```bash
+docker-compose up --build
+```
+This will start the following services:
+- FastAPI backend
+- PostgreSQL database
+- pgAdmin (database management UI)
+- Airflow scheduler & webserver
+- Streamlit web app
