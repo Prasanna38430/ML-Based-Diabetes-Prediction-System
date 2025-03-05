@@ -134,9 +134,9 @@ def get_past_predictions(start_date: date, end_date: date, source: str, page: in
 
         # Adjust query based on source
         if source == "Scheduled Predictions":
-            query += " AND source = 'Scheduled Predictions'"
+            query += " AND source = 'Scheduled Predictions' ORDER BY prediction_date DESC"
         elif source == "Webapp Predictions":
-            query += " ORDER BY prediction_date DESC"
+            query += " AND source = 'Webapp Predictions' ORDER BY prediction_date DESC"
 
         # Apply limit only if provided and the source is not Webapp Predictions
         if limit and source != "Webapp Predictions":
