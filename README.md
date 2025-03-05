@@ -1,4 +1,4 @@
-# Dsp-ML-Based-Daibetes-App-Project
+# Dsp-ML-Based-Diabetes-App-Project
 
 # Project Setup
 
@@ -8,10 +8,10 @@ This repository contains the setup for an end-to-end data science project involv
 
 The project aims to:
 
-- Allow users to make on-demand predictions via a **Streamlit** web interface.
+- Allow users to make on-demand predictions and Fetch Past predictions via a **Streamlit** web interface.
 - Expose a machine learning model via **FastAPI**.
-- Store predictions and data quality information in a **PostgreSQL** database.
-- Schedule and run ingestion pipeline, and prediction jobs using **Apache Airflow**.
+- Store predictions in a **PostgreSQL** database.
+- Schedule and run Ingestion pipeline, and prediction jobs using **Apache Airflow**.
 
 ### Components
 
@@ -34,11 +34,12 @@ Make sure you have the following installed on your machine:
 - **Docker Compose**: [Docker Compose Installation Guide](https://docs.docker.com/compose/install/)
 - **Python 3.8+** (for running notebooks and scripts outside of Docker containers)
 - **Git**: To clone the repository
--  Apache Airflow
+-  **Apache Airflow**: [Airflow Installation Guide with Docker](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html/)
 
 ### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/Prasanna38430/Dsp-ML-Based-Daibetes-App-Project-G1.git
+cd Dsp-ML-Based-Daibetes-App-Project-G1
 ```
 
 ### Step 2: Start Services with Docker Compose
@@ -51,3 +52,59 @@ This will start the following services:
 - pgAdmin (database management UI)
 - Airflow scheduler & webserver
 - Streamlit web app
+- pgAdmin for database management
+
+---
+
+### 3 Setup Database
+After starting the services, create the `diabetes_predictions` database and `predictions` table.
+
+1. Open a terminal and run:
+```sh
+docker exec -it <postgres_container_name> psql -U postgres -d diabetes_predictions
+```
+
+2. Run the following SQL command inside the PostgreSQL shell:
+```sql
+CREATE TABLE predictions (
+    id SERIAL PRIMARY KEY,
+    gender VARCHAR(50),
+    age INT,
+    heart_disease INT,
+    smoking_history VARCHAR(50),
+    hbA1c_level FLOAT,
+    hypertension INT,
+    blood_glucose_level INT,
+    bmi FLOAT,
+    diabetes_prediction VARCHAR(10),
+    source VARCHAR(50),
+    prediction_date TIMESTAMP
+);
+```
+
+### Reinitialize the Database Service
+After setting up the database, restart the PostgreSQL service:
+```sh
+docker-compose restart db
+```
+
+### Access pgAdmin
+1. Open `http://localhost:5050` in your browser.
+2. Login with:
+   - **Email**: `admin@admin.com`
+   - **Password**: `admin`
+3. Add a new server:
+   - Host: `db`
+   - Username: `postgres`
+   - Password: `postgres`
+
+---
+### Step 4: Access Services
+- **Web App (Streamlit):** `http://localhost:8501`
+- **API Service (FastAPI Docs):** `http://localhost:8000/docs`
+- **Airflow UI:** `http://localhost:8080` (Login with `airflow / airflow`)
+
+### Step 4: Running Airflow DAGs
+- Open the Airflow UI at `http://localhost:8080`.
+- Enable and trigger the `data_ingestion_pipeline` and `prediction_job` dags.
+
