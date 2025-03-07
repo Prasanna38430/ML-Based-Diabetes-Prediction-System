@@ -68,7 +68,7 @@ DSP-ML-BASED-DIABETES-APP-PROJECT-G1/
 │   ├── main.py
 │   └── requirements.txt
 ├── .gitignore
-├── docker-compose.vml
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -96,7 +96,7 @@ The `.gitignore` file in the project includes the following lines to ensure that
   data/
 ├── raw_data/        # Folder containing raw data after data_generation.
 ├── good_data/       # Folder containing the files after simple ingestion dag.
-└── dataset.csv      # Main dataset used for the project.
+└── diabetes_dataset.csv      # Main dataset used for the project.
 ```
 - The Generated data for ingestion will store in `raw_data/` folder and cleaned data will strore `good_data/` folder.
 
@@ -118,6 +118,7 @@ AIRFLOW_UID=50000
 
 ```bash
 git clone https://github.com/Prasanna38430/Dsp-ML-Based-Daibetes-App-Project-G1.git
+
 cd Dsp-ML-Based-Daibetes-App-Project-G1
 ```
 
@@ -125,8 +126,15 @@ cd Dsp-ML-Based-Daibetes-App-Project-G1
 1. Add your Data Base Credentials to Fastapi database service in **docker-Compose.yml** file.
 
 ```bash
-docker-compose up --build
+docker-compose up airflow-init #to Initialize the airflow
 ```
+```bash
+docker-compose run airflow-worker airflow users create --role Admin --username admin --email admin --firstname admin --lastname admin --password admin #to create user name and password
+```
+```bash
+docker-compose up --build #to build and run all services
+```
+
 This will start the following services:
 - FastAPI backend
 - PostgreSQL database
@@ -142,7 +150,7 @@ After starting the services, create the `diabetes_predictions` database and `pre
 
 1. **Open a terminal and run:**
 ```sh
-docker exec -it <postgres_container_name> psql -U postgres -d diabetes_predictions
+docker exec -it <postgres_container_name or id> psql -U postgres -d diabetes_predictions
 ```
 
 2. **Run the following SQL command inside the PostgreSQL shell:**
@@ -166,7 +174,7 @@ CREATE TABLE predictions (
 3. **Re-initialize the Database Service**
 After setting up the database, restart the PostgreSQL service:
 ```sh
-docker-compose restart < database Container id or name >
+docker-compose up < service name >
 ```
 
 4. **Access pgAdmin**
@@ -178,7 +186,16 @@ docker-compose restart < database Container id or name >
    - Host: `db`
    - Username: `your_user_name`
    - Password: `your_passowrd`
+4. Create data base for tracking files 
 
+```sh
+Data base name : processed_files_db
+```
+```sh
+CREATE TABLE IF NOT EXISTS processed_files (
+    file_name TEXT PRIMARY KEY
+); #for table creation
+```
 ---
 ### Step 5: Access Services
 - **Web App (Streamlit):** `http://localhost:8501`
