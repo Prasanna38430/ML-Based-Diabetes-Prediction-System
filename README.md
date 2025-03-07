@@ -27,6 +27,8 @@ The project aims to:
 ## Installation and Setup
 ### Prerequisites
 
+- **Diabetes Dataset**: Download required data set from Kaggle [Diabetes Dataset Kaggle](https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset)
+
 Make sure you have the following installed on your machine:
 
 - **Docker**: [Docker Installation Guide](https://docs.docker.com/get-docker/)
@@ -37,6 +39,37 @@ Make sure you have the following installed on your machine:
 
 -  **Docker Compose File for all services**:Use docker-compose.yml file
 
+## Project Structure
+- Your Project Structure should look like this:
+
+DSP-ML-BASED-DIABETES-APP-PROJECT-G1/
+├── airflow/
+│   ├── dags/
+│   │   ├── prediction_job.py
+│   │   └── ingestion_pipeline.py
+│   └── data/
+│       ├── raw_data/
+│       ├── good_data/
+│       └── diabetes_data_set.csv
+├── data_generation/
+│   └── data_generation_split.py
+├── Database/
+│   └── database_setup.sql
+├── FastApi/
+│   ├── api.py
+│   ├── diabetes_ml_model.pkl
+│   ├── Dockerfile
+│   ├── ml_model_training.py
+│   └── requirements.txt
+├── NoteBook/
+│   └── Error_Generation.ipynb
+├── Webapp/
+│   ├── Dockerfile
+│   ├── main.py
+│   └── requirements.txt
+├── .gitignore
+├── docker-compose.vml
+└── README.md
 
 ### Step 1: Git Ignore Setup
 
@@ -186,3 +219,5 @@ By following these steps, you will have successfully set up your PostgreSQL conn
 ### Step 6: Running Airflow DAGs
 
 - Enable and trigger the `data_ingestion_pipeline` and `prediction_job` dags.
+
+Good Luck 🤞
