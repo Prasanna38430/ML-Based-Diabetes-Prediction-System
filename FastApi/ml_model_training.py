@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score
 
 # Load dataset safely
 try:
-    df = pd.read_csv('../data/diabetes_dataset.csv', low_memory=False)
+    df = pd.read_csv('./airflow/data/diabetes_dataset.csv', low_memory=False)
 except FileNotFoundError:
     raise FileNotFoundError("The file 'diabetes_dataset.csv' was not found. Ensure it's in the correct directory.")
 
@@ -60,7 +60,7 @@ y_pred = pipeline.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 
 # Save the trained model
-joblib.dump(pipeline, "../Fastapi/diabetes_ml_model.pkl")
+joblib.dump(pipeline, "./Fastapi/diabetes_ml_model.pkl")
 
 print(f"✅ Model trained and saved successfully as 'diabetes_model.pkl'! ")
 print(f" Model Accuracy: {accuracy:.4f} (or {accuracy * 100:.2f}%)")
