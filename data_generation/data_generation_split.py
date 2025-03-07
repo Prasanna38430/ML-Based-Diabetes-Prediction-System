@@ -1,13 +1,13 @@
 import pandas as pd
 import os
  
-input_file = './data/diabetes_dataset.csv'
+input_file = './airflow/data/diabetes_dataset.csv'
  
 base_name = os.path.splitext(os.path.basename(input_file))[0]
  
 df = pd.read_csv(input_file)
  
-raw_data_folder = './data/raw_data'
+raw_data_folder = '../airflow/data/data/raw_data'
  
 os.makedirs(raw_data_folder, exist_ok=True)
  
