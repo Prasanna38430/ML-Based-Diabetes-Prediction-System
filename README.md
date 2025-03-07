@@ -34,15 +34,59 @@ Make sure you have the following installed on your machine:
 - **Python 3.8+** (for running notebooks and scripts outside of Docker containers)
 - **Git**: To clone the repository
 -  **Apache Airflow**: [Airflow Installation Guide with Docker](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html/)
--  **Docker Compose File for all services**:
 
-### Step 1: Clone the Repository
+-  **Docker Compose File for all services**:Use docker-compose.yml file
+
+
+### Step 1: Git Ignore Setup
+
+This project excludes certain files and folders from version control to avoid tracking sensitive or large data files. 
+
+### 1. Excluded Files and Folders
+
+The following files and folders are excluded from Git:
+
+- **`data/` folder**: This folder contains raw_data and processed data. It is excluded to avoid tracking large and sensitive files.
+- **`.env` file**: This file contains environment variables such as database credentials and API keys. It is excluded to keep sensitive information secure.
+
+### 2. `.gitignore` Configuration
+
+The `.gitignore` file in the project includes the following lines to ensure that the `data/` folder and `.env` file are not tracked by Git:
+
+### 3. How to Use
+
+- **Data Folder**:  
+  You will need to set up the `data/` folder locally. It should have the following structure:
+
+  data/
+├── raw_data/        # Folder containing raw data after data_generation.
+├── good_data/       # Folder containing the files after simple ingestion dag.
+└── dataset.csv      # Main dataset used for the project.
+
+Add your raw data to the `raw_data/` folder and cleaned data to the `good_data/` folder.
+
+- **`.env` File**:  
+Create a `.env` file in the root directory by copying the contents of `.env.example`. Update the values in the `.env` file for your specific environment, such as database connection details.
+
+**Example `.env` file**  
+   After updating the `.env` file with your values, it should look something like this:
+   ```dotenv
+   DATABASE_URL=postgresql://postgres:your_password@localhost:5432/diabetes_predictions
+   AIRFLOW_UID=50000
+
+**Note** : The `data/` folder and `.env` file will not be included when you clone the repository. You will need to add your own data files and configure the environment locally.
+
+
+## Step 2: Clone the Repository
+
 ```bash
 git clone https://github.com/Prasanna38430/Dsp-ML-Based-Daibetes-App-Project-G1.git
 cd Dsp-ML-Based-Daibetes-App-Project-G1
 ```
 
-### Step 2: Start Services with Docker Compose
+### 3. Start Services with Docker Compose
+1. Add your Data Base Credentials to Fastapi database service in **docker-Compose.yml** file.
+
 ```bash
 docker-compose up --build
 ```
@@ -55,7 +99,7 @@ This will start the following services:
 
 ---
 
-### 3 Setup Database
+## Step 4: Setup Database
 After starting the services, create the `diabetes_predictions` database and `predictions` table.
 
 1. Open a terminal and run:
@@ -98,7 +142,7 @@ docker-compose restart db
    - Password: `postgres`
 
 ---
-### Step 4: Access Services
+### Step 5: Access Services
 - **Web App (Streamlit):** `http://localhost:8501`
 - **API Service (FastAPI Docs):** `http://localhost:8000/docs`
 - **Airflow UI:** `http://localhost:8080` (Login with `airflow / airflow`)
