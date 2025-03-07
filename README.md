@@ -69,10 +69,12 @@ Add your raw data to the `raw_data/` folder and cleaned data to the `good_data/`
 Create a `.env` file in the root directory by copying the contents of `.env.example`. Update the values in the `.env` file for your specific environment, such as database connection details.
 
 **Example `.env` file**  
-   After updating the `.env` file with your values, it should look something like this:
-   ```dotenv
-   DATABASE_URL=postgresql://postgres:your_password@localhost:5432/diabetes_predictions
-   AIRFLOW_UID=50000
+After updating the `.env` file with your values, it should look something like this:
+
+```dotenv
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/diabetes_predictions
+AIRFLOW_UID=50000
+```
 
 **Note** : The `data/` folder and `.env` file will not be included when you clone the repository. You will need to add your own data files and configure the environment locally.
 
