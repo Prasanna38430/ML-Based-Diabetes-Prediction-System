@@ -1,0 +1,26 @@
+gender,age,hypertension,heart_disease,smoking_history,bmi,hbA1c_level,blood_glucose_level,diabetes
+Female,80.0,1,0,Never,28.27,6.6,90,0
+Female,25.0,0,0,No Info,25.86,6.6,100,0
+Male,25.0,0,0,Former,27.32,4.8,200,0
+Female,59.0,0,0,Never,54.43,6.5,100,0
+Male,41.0,0,0,No Info,22.72,5.7,160,0
+Female,7.0,0,0,No Info,16.6,3.5,126,0
+Female,54.0,0,0,Current,24.23,6.0,200,0
+Female,36.0,0,0,No Info,19.85,6.6,85,0
+Female,36.0,0,0,No Info,19.85,6.6,85,0
+Female,21.0,0,0,No Info,24.42,6.5,158,0
+Male,41.0,0,0,No Info,22.72,5.7,160,0
+Female,18.0,0,0,Never,28.36,6.0,155,0
+Female,36.0,0,0,No Info,19.85,6.6,85,0
+Male,41.0,0,0,No Info,22.72,5.7,160,0
+Female,37.0,0,0,No Info,27.32,4.0,126,0
+Male,80.0,0,1,Never,27.6,5.7,126,0
+Female,80.0,1,0,Never,28.27,6.6,90,0
+Female,37.0,0,0,No Info,27.32,4.0,126,0
+Male,80.0,0,1,Never,27.6,5.7,126,0
+Female,80.0,1,0,Never,28.27,6.6,90,0
+Female,49.0,0,0,Former,57.7,6.1,130,1
+Female,18.0,0,0,Never,28.36,6.0,155,0
+Female,44.0,0,0,No Info,21.96,4.8,158,0
+Female,18.0,0,0,Never,28.36,6.0,155,0
+Male,48.0,0,0,Current,23.55,5.7,126,0
