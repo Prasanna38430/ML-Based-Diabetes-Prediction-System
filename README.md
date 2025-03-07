@@ -22,11 +22,10 @@ The project aims to:
     - Ingest data from raw_data to good_data folder.
     - check data from good_data and Make predictions based on new data.
 5. **Notebook**: Generates synthetic data errors in the dataset for testing purposes.
-6. **Data Ingestion Pipeline**: Moves data from the raw folder to the good folder after validation.
-7. **Docker**: The entire setup is containerized using Docker to provide easy deployment.
+6. **Docker**: The entire setup is containerized using Docker to provide easy deployment.
 
-### Installation and Setup
-## Prerequisites
+## Installation and Setup
+### Prerequisites
 
 Make sure you have the following installed on your machine:
 
@@ -35,6 +34,7 @@ Make sure you have the following installed on your machine:
 - **Python 3.8+** (for running notebooks and scripts outside of Docker containers)
 - **Git**: To clone the repository
 -  **Apache Airflow**: [Airflow Installation Guide with Docker](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html/)
+-  **Docker Compose File for all services**:
 
 ### Step 1: Clone the Repository
 ```bash
@@ -52,7 +52,6 @@ This will start the following services:
 - pgAdmin (database management UI)
 - Airflow scheduler & webserver
 - Streamlit web app
-- pgAdmin for database management
 
 ---
 
@@ -104,7 +103,40 @@ docker-compose restart db
 - **API Service (FastAPI Docs):** `http://localhost:8000/docs`
 - **Airflow UI:** `http://localhost:8080` (Login with `airflow / airflow`)
 
-### Step 4: Running Airflow DAGs
-- Open the Airflow UI at `http://localhost:8080`.
-- Enable and trigger the `data_ingestion_pipeline` and `prediction_job` dags.
+### Step 5: Setting Up Database Connection in Airflow UI
 
+- Open the Airflow UI at `http://localhost:8080`.
+
+- To set up a PostgreSQL connection in the Airflow UI for track processed files, follow these steps:
+
+1. **Login to Airflow Web UI**
+   - Open your browser and go to the Airflow Web UI (usually available at `http://localhost:8080`).
+
+2. **Navigate to Connections**
+   - In the top menu, click on **Admin** > **Connections**.
+
+3. **Add New Connection**
+   - Click the **+** button to add a new connection.
+   - Fill in the following details for the new connection:
+     - **Conn Id**: `postgres_default`
+     - **Conn Type**: `PostgreSQL`
+     - **Host**: `localhost` (or your PostgreSQL server's IP)
+     - **Schema**: `your_db_name` (the name of your database)
+     - **Login**: `your_db_user` (your PostgreSQL username)
+     - **Password**: `your_db_password` (your PostgreSQL password)
+     - **Port**: `5432` (default PostgreSQL port)
+
+4. **Test the Connection**
+   - After filling out the details, click **Test Connection** to verify the connection.
+   - If the test is successful, click **Save** to store the connection details.
+
+5. **Use the Connection in Your DAGs**
+   - In your Airflow tasks (such as PythonOperators), you can now use this connection by referring to it with `postgres_conn_id='postgres_default'`.
+
+---
+
+By following these steps, you will have successfully set up your PostgreSQL connection in Airflow.
+
+### Step 6: Running Airflow DAGs
+
+- Enable and trigger the `data_ingestion_pipeline` and `prediction_job` dags.
