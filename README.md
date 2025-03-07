@@ -17,7 +17,7 @@ The project aims to:
 
 1. **Webapp** (Streamlit): Provides a UI for making predictions and visualizing past predictions.
 2. **API** (FastAPI): Exposes endpoints to make predictions and retrieve past predictions.
-3. **Database** (PostgreSQL): Stores predictions, data quality metrics, and logs.
+3. **Database** (PostgreSQL): Stores On demand and Scheduled  predictions.
 4. **Airflow DAGs**: 
     - Ingest data from raw_data to good_data folder.
     - check data from good_data and Make predictions based on new data.
@@ -32,7 +32,6 @@ The project aims to:
 Make sure you have the following installed on your machine:
 
 - **Docker**: [Docker Installation Guide](https://docs.docker.com/get-docker/)
-- **Docker Compose**: [Docker Compose Installation Guide](https://docs.docker.com/compose/install/)
 - **Python 3.8+** (for running notebooks and scripts outside of Docker containers)
 - **Git**: To clone the repository
 -  **Apache Airflow**: [Airflow Installation Guide with Docker](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html/)
@@ -42,6 +41,7 @@ Make sure you have the following installed on your machine:
 ## Project Structure
 - Your Project Structure should look like this:
 
+```bash
 DSP-ML-BASED-DIABETES-APP-PROJECT-G1/
 ├── airflow/
 │   ├── dags/
@@ -70,6 +70,7 @@ DSP-ML-BASED-DIABETES-APP-PROJECT-G1/
 ├── .gitignore
 ├── docker-compose.vml
 └── README.md
+```
 
 ### Step 1: Git Ignore Setup
 
@@ -88,24 +89,25 @@ The `.gitignore` file in the project includes the following lines to ensure that
 
 ### 3. How to Use
 
-- **Data Folder**:  
-  You will need to set up the `data/` folder locally. It should have the following structure:
+**Data Folder**:  
+- You will need to set up the `data/` folder locally. It should have the following structure:
 
+```bash
   data/
 ├── raw_data/        # Folder containing raw data after data_generation.
 ├── good_data/       # Folder containing the files after simple ingestion dag.
 └── dataset.csv      # Main dataset used for the project.
+```
+- The Generated data for ingestion will store in `raw_data/` folder and cleaned data will strore `good_data/` folder.
 
-Add your raw data to the `raw_data/` folder and cleaned data to the `good_data/` folder.
-
-- **`.env` File**:  
-Create a `.env` file in the root directory by copying the contents of `.env.example`. Update the values in the `.env` file for your specific environment, such as database connection details.
+**`.env` File**:  
+- Create a `.env` file in the root directory by copying the contents of `.env.example`. Update the values in the `.env` file for your specific environment, such as database connection details.
 
 **Example `.env` file**  
-After updating the `.env` file with your values, it should look something like this:
+- After updating the `.env` file with your values, it should look something like this:
 
 ```dotenv
-DATABASE_URL=postgresql://postgres:your_password@localhost:5432/diabetes_predictions
+DATABASE_URL=postgresql://postgres:your_password@db:5432/diabetes_predictions
 AIRFLOW_UID=50000
 ```
 
@@ -119,7 +121,7 @@ git clone https://github.com/Prasanna38430/Dsp-ML-Based-Daibetes-App-Project-G1.
 cd Dsp-ML-Based-Daibetes-App-Project-G1
 ```
 
-### 3. Start Services with Docker Compose
+### Step 3:  Start Services with Docker Compose
 1. Add your Data Base Credentials to Fastapi database service in **docker-Compose.yml** file.
 
 ```bash
@@ -135,14 +137,15 @@ This will start the following services:
 ---
 
 ## Step 4: Setup Database
+
 After starting the services, create the `diabetes_predictions` database and `predictions` table.
 
-1. Open a terminal and run:
+1. **Open a terminal and run:**
 ```sh
 docker exec -it <postgres_container_name> psql -U postgres -d diabetes_predictions
 ```
 
-2. Run the following SQL command inside the PostgreSQL shell:
+2. **Run the following SQL command inside the PostgreSQL shell:**
 ```sql
 CREATE TABLE predictions (
     id SERIAL PRIMARY KEY,
@@ -160,21 +163,21 @@ CREATE TABLE predictions (
 );
 ```
 
-### Reinitialize the Database Service
+3. **Re-initialize the Database Service**
 After setting up the database, restart the PostgreSQL service:
 ```sh
-docker-compose restart db
+docker-compose restart < database Container id or name >
 ```
 
-### Access pgAdmin
+4. **Access pgAdmin**
 1. Open `http://localhost:5050` in your browser.
 2. Login with:
-   - **Email**: `admin@admin.com`
-   - **Password**: `admin`
+   - **Email**: `admin@example.com`
+   - **Password**: `project`
 3. Add a new server:
    - Host: `db`
-   - Username: `postgres`
-   - Password: `postgres`
+   - Username: `your_user_name`
+   - Password: `your_passowrd`
 
 ---
 ### Step 5: Access Services
@@ -186,7 +189,7 @@ docker-compose restart db
 
 - Open the Airflow UI at `http://localhost:8080`.
 
-- To set up a PostgreSQL connection in the Airflow UI for track processed files, follow these steps:
+- To set up a PostgreSQL connection in the Airflow UI for tracking processed files, follow these steps:
 
 1. **Login to Airflow Web UI**
    - Open your browser and go to the Airflow Web UI (usually available at `http://localhost:8080`).
