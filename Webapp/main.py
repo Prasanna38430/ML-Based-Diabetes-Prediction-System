@@ -181,6 +181,6 @@ else:
                 else:
                     st.error("Unexpected response format")
             else:
-                st.error(f"Failed to get a valid response from the API. Status code: {response.status_code}")
+                st.warning("No past predictions found for the selected date range and source.")
         except Exception as e:
             st.error(f"Error: {str(e)}")
