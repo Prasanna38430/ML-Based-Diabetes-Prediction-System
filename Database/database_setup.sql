@@ -38,5 +38,5 @@ CREATE TABLE predictions (
     bmi FLOAT,
     diabetes_prediction VARCHAR(10),
     source VARCHAR(50),
-    prediction_date DATE
+    prediction_date TIMESTAMP
 );
