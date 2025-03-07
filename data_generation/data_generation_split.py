@@ -7,7 +7,7 @@ base_name = os.path.splitext(os.path.basename(input_file))[0]
  
 df = pd.read_csv(input_file)
  
-raw_data_folder = '../airflow/data/data/raw_data'
+raw_data_folder = './airflow/data/raw_data'
  
 os.makedirs(raw_data_folder, exist_ok=True)
  
