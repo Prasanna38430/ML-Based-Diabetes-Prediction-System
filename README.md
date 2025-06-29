@@ -285,7 +285,6 @@ CREATE TABLE diabetes_data_ingestion_stats (
       - **Key**: `TEAMS_WEBHOOK_URL`
       - **Value**: `<your_teams_webhook_url>` (the full URL to your Teams incoming webhook)
    - Save the variable.
----
 
 By following above steps, you will have successfully set up your PostgreSQL connections and Team Webhook Connection in Airflow.
 
@@ -303,8 +302,6 @@ By following above steps, you will have successfully set up your PostgreSQL conn
 ### Airflow DAG: ``prediction_job`
 - Check any new `.csv` files in `good_data/` folder
 - Send those files to fastapi to make predictions
-
----
 
 ## Model Training & FastAPI Backend
 
@@ -329,7 +326,6 @@ The FastAPI backend exposes endpoints to make diabetes predictions and retrieve 
 - **Past Predictions Endpoint (`/past-predictions`):** Retrieves historical prediction records filtered by date range and source.
 - **Database Connection:** Uses a PostgreSQL connection pool for efficient data storage and retrieval.
 - **Background Tasks:** Inserts predictions into the database asynchronously to keep API responses fast and responsive.
----
 
 ## Data Validation with Great Expectations
 
@@ -359,9 +355,6 @@ The FastAPI backend exposes endpoints to make diabetes predictions and retrieve 
   - Stored in a **PostgreSQL** table for further analysis.
   - Presented as rich **Data Docs** served through an Nginx container, accessible at `http://localhost:8085`.
   - Monitored and visualized through **Grafana dashboards** for real-time data quality insights.
----
-
----
 
 ## Database Tables
 
@@ -370,9 +363,6 @@ The FastAPI backend exposes endpoints to make diabetes predictions and retrieve 
 - `training_data` – Used as baseline for drift detection
 - `processed_files` – Prevents reprocessing of already-ingested files
 
----
-
----
 ## Grafana Dashboards
 
 ### 1. Ingested Data Monitoring Dashboard
@@ -390,7 +380,6 @@ The FastAPI backend exposes endpoints to make diabetes predictions and retrieve 
 
 > Grafana queries for all these graphs are provided in a separate `grafana_queries.sql` file.
 
----
 
 ## Contributors
 **Prasanna Kumar ADABALA**- Worked on Model Training and 
