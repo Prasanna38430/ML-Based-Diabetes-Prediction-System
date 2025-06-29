@@ -303,6 +303,22 @@ By following above steps, you will have successfully set up your PostgreSQL conn
 - Check any new `.csv` files in `good_data/` folder
 - Send those files to fastapi to make predictions
 
+## Streamlit Webapp
+
+The Streamlit app provides an interactive UI for diabetes prediction with two main features:
+
+- **Prediction Page**  
+  - Supports single and batch predictions.  
+  - Users can input features manually or upload CSV files with multiple records.  
+  - Sends data to the FastAPI backend for inference and displays results in a table.  
+  - Allows downloading prediction results as CSV.
+
+- **Past Predictions Page**  
+  - Enables users to query and view historical predictions filtered by date range and source.  
+  - Displays results in a table with download option for CSV export.
+
+The app interacts with the FastAPI API endpoints (`/predict` and `/past-predictions`) to perform real-time predictions and retrieve stored data, providing a seamless user experience for diabetes risk assessment.
+
 ## Model Training & FastAPI Backend
 
 ### Model Training Script
@@ -378,11 +394,15 @@ The FastAPI backend exposes endpoints to make diabetes predictions and retrieve 
 - **Prediction Class Distribution** – Bar chart of Yes/No prediction counts
 - **Age Drift vs Training Data** – Line chart showing % drift in age compared to training average
 
-> Grafana queries for all these graphs are provided in a separate `grafana_queries.sql` file.
+- Grafana queries for all these graphs are provided in a separate `grafana_queries.sql` file.
 
 
 ## Contributors
-**Prasanna Kumar ADABALA**- Worked on Model Training and 
+**Prasanna Kumar ADABALA**
+**Mouna Priya Pokuru**
+**Raghuram Munagala**
+**Bhargavi Akula**
+**Nithin Naga Sai Gajula**
 
 
 ## Conclusion
