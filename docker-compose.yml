@@ -50,6 +50,7 @@ services:
       - "5432:5432"
     volumes:
       - fastapi_postgres_data:/var/lib/postgresql/data
+      - ./train_data:/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d diabetes_predictions"]
       interval: 5s
@@ -237,10 +238,36 @@ services:
     networks:
       - airflow-network
       - shared-network
+  ge-docs-server:
+    image: nginx:alpine
+    container_name: ge_docs_server
+    ports:
+      - "8085:80"
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-./airflow}/great_expectations/uncommitted/data_docs/local_site:/usr/share/nginx/html:ro
+    networks:
+      - shared-network
+  
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=dsp
+      - GF_SECURITY_ADMIN_PASSWORD=project
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - shared-network
+    depends_on:
+      - db  
+
 
 volumes:
   fastapi_postgres_data:
   airflow_postgres_data:
+  grafana-storage:
 
 networks:
   app-network:
