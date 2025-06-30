@@ -194,53 +194,53 @@ docker-compose restart < database Container id or name >
 ```
 
 4. **Access pgAdmin**
-1. Open `http://localhost:5050` in your browser.
-2. Login with:
-   - **Email**: `admin@example.com`
-   - **Password**: `project`
-3. Add a new server:
-   - Host: `db`
-   - Username: `your_user_name`
-   - Password: `your_passowrd`
-4. Create data base for tracking files 
+   1. Open `http://localhost:5050` in your browser.
+   2. Login with:
+      - **Email**: `admin@example.com`
+      - **Password**: `project`
+   3. Add a new server:
+      - Host: `db`
+      - Username: `your_user_name`
+      - Password: `your_passowrd`
+   4. Create data base for tracking files 
 
-```sh
-Data base name : processed_files_db
-```
-```sql
-CREATE TABLE IF NOT EXISTS processed_files (
-    file_name TEXT PRIMARY KEY
-); #for table creation
-```
+   ```sh
+   Data base name : processed_files_db
+   ```
+   ```sql
+   CREATE TABLE IF NOT EXISTS processed_files (
+      file_name TEXT PRIMARY KEY
+   ); #for table creation
+   ```
 
 5. Create new database of `diabetes_errors` with table `diabetes_data_ingestion_stats` with follwing schema
 
-```sql
-CREATE TABLE diabetes_data_ingestion_stats (
-    id SERIAL PRIMARY KEY,
-    file_name VARCHAR(255),
-    total_rows INTEGER,
-    valid_rows INTEGER,
-    invalid_rows INTEGER,
-    missing_age INTEGER,
-    missing_blood_glucose_level INTEGER,
-    missing_gender INTEGER,
-    missing_hbA1c_level INTEGER,
-    invalid_gender INTEGER,
-    age_out_of_range INTEGER,
-    bmi_out_of_range INTEGER,
-    invalid_age_type INTEGER,
-    invalid_blood_glucose_level_type INTEGER,
-    invalid_bmi_type INTEGER,
-    hbA1c_level_format_errors INTEGER,
-    missing_heart_disease_column INTEGER,
-    median_age_out_of_range INTEGER,
-    median_bmi_out_of_range INTEGER,
-    criticality VARCHAR(50),
-    error_summary TEXT,
-    created_on TIMESTAMP
-);
-```
+   ```sql
+   CREATE TABLE diabetes_data_ingestion_stats (
+      id SERIAL PRIMARY KEY,
+      file_name VARCHAR(255),
+      total_rows INTEGER,
+      valid_rows INTEGER,
+      invalid_rows INTEGER,
+      missing_age INTEGER,
+      missing_blood_glucose_level INTEGER,
+      missing_gender INTEGER,
+      missing_hbA1c_level INTEGER,
+      invalid_gender INTEGER,
+      age_out_of_range INTEGER,
+      bmi_out_of_range INTEGER,
+      invalid_age_type INTEGER,
+      invalid_blood_glucose_level_type INTEGER,
+      invalid_bmi_type INTEGER,
+      hbA1c_level_format_errors INTEGER,
+      missing_heart_disease_column INTEGER,
+      median_age_out_of_range INTEGER,
+      median_bmi_out_of_range INTEGER,
+      criticality VARCHAR(50),
+      error_summary TEXT,
+      created_on TIMESTAMP
+   );
+   ```
 
 ---
 
@@ -269,6 +269,7 @@ CREATE TABLE diabetes_data_ingestion_stats (
      - **Port**: `5432` (default PostgreSQL port)
    - Save the connection.
 
+
    2. Add PostgreSQL Connection (for saving validation stats)
    - Go to **Admin** → **Connections**
    - Click the **+** button to add a new connection.
@@ -282,6 +283,7 @@ CREATE TABLE diabetes_data_ingestion_stats (
       - **Port**: `5432` (default PostgreSQL port)
    - Save the connection.
 
+
    3. Add Microsoft Teams Webhook URL Variable (for sending alerts)
    - Go to **Admin** → **Variables**
    - Click the **+** button to add a new variable.
@@ -289,6 +291,7 @@ CREATE TABLE diabetes_data_ingestion_stats (
       - **Key**: `TEAMS_WEBHOOK_URL`
       - **Value**: `<your_teams_webhook_url>` (the full URL to your Teams incoming webhook)
    - Save the variable.
+   
 
 By following above steps, you will have successfully set up your PostgreSQL connections and Team Webhook Connection in Airflow.
 
@@ -313,6 +316,8 @@ Grafana is pre-configured via `docker-compose.yml` — no manual installation re
 - Enable and trigger the `diabetes_ingestion_dag` and `prediction_job` dags.
 
 ✅ By following the above steps, you will have successfully set up the **Diabetes ML Prediction System** with automated data validation, real-time monitoring, and user-friendly prediction interfaces.
+
+
 
 ## 🔍  Role of Each Service
 ### 🧑‍💻 User-Facing Services (On-Demand)
@@ -473,9 +478,8 @@ This dashboard tracks key indicators of model input drift and predictive perform
 
 
 ## Conclusion
-Thank you for checking out this project! This project provides a complete, automated diabetes prediction system with reliable data validation, real-time monitoring, and user-friendly interfaces. It demonstrates a practical approach to deploying trustworthy machine learning solutions in healthcare.
 
-Contributions and feedback are welcome!
+Thank you for checking out this project! It offers a practical and modular approach to building and deploying ML-driven applications with robust data quality and monitoring. Contributions and feedback are welcome!
 
 
 
