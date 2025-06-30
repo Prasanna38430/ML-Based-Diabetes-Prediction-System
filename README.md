@@ -312,7 +312,7 @@ Grafana is pre-configured via `docker-compose.yml` — no manual installation re
 - **Password**: `project`
 
 
-## Step 6: Running Airflow DAGs
+## Step 7: Running Airflow DAGs
 - Enable and trigger the `diabetes_ingestion_dag` and `prediction_job` dags.
 
 ✅ By following the above steps, you will have successfully set up the **Diabetes ML Prediction System** with automated data validation, real-time monitoring, and user-friendly prediction interfaces.
@@ -378,7 +378,7 @@ These pipelines run automatically and handle data ingestion, validation, and pre
 - Sends Teams alerts if data quality is poor
 - Moves file to either `good_data/` or `bad_data/` based on results
 
-### Airflow DAG 2: ``prediction_job`
+### Airflow DAG 2: ``prediction_job``
 - Check any new `.csv` files in `good_data/` folder
 - Send those files to fastapi to make predictions
 
