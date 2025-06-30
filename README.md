@@ -151,11 +151,12 @@ cd Dsp-ML-Based-Daibetes-App-Project-G1
 docker-compose up --build
 ```
 This will start the following services:
-- FastAPI backend
-- PostgreSQL database
-- pgAdmin (database management UI)
-- Airflow scheduler & webserver
-- Streamlit web app
+- **Airflow Webserver:** `http://localhost:8080` (Login with `airflow / airflow`)
+- **FastAPI API:** `http://localhost:8000`
+- **Streamlit Webapp:** `http://localhost:8501`
+- **Grafana Dashboard:** `http://localhost:3001` (Login with `dsp / project`)
+- **Great Expectations Data Docs (via nginx):** `http://localhost:8085`
+- **PGAdmin (Postgres GUI):** `http://localhost:5050` (Login with `admin@example.com / project`)
 
 ---
 
@@ -201,8 +202,18 @@ docker-compose restart < database Container id or name >
    - Host: `db`
    - Username: `your_user_name`
    - Password: `your_passowrd`
+4. Create data base for tracking files 
 
-4. Create new wdatabase of diabetes_errors with table diabetes_data_ingestion_stats with follwing schema
+```sh
+Data base name : processed_files_db
+```
+```sql
+CREATE TABLE IF NOT EXISTS processed_files (
+    file_name TEXT PRIMARY KEY
+); #for table creation
+```
+
+5. Create new database of `diabetes_errors` with table `diabetes_data_ingestion_stats` with follwing schema
 
 ```sql
 CREATE TABLE diabetes_data_ingestion_stats (
@@ -232,15 +243,8 @@ CREATE TABLE diabetes_data_ingestion_stats (
 ```
 
 ---
-## Step 5: Access Services
-- **Airflow Webserver:** `http://localhost:8080` (Login with `airflow / airflow`)
-- **FastAPI API:** `http://localhost:8000`
-- **Streamlit Webapp:** `http://localhost:8501`
-- **Grafana Dashboard:** `http://localhost:3001` (Login with `dsp / project`)
-- **Great Expectations Data Docs (via nginx):** `http://localhost:8085`
-- **PGAdmin (Postgres GUI):** `http://localhost:5050` (Login with `admin@example.com / project`)
 
-## Step 6: Setting Up Database Connection in Airflow UI
+## Step 5: Setting Up Database Connection in Airflow UI
 
 - Open the Airflow UI at `http://localhost:8080`.
 
@@ -288,22 +292,33 @@ CREATE TABLE diabetes_data_ingestion_stats (
 
 By following above steps, you will have successfully set up your PostgreSQL connections and Team Webhook Connection in Airflow.
 
-## Step 7: Running Airflow DAGs
+### Step 6: Setting up Great Expectations with Airflow and Docker
+
+- **Great Expectations (version 0.18.19)** to ensure high-quality, reliable data ingestion for diabetes prediction.
+
+- The `Dockerfile` and accompanying `requirements.txt` are pre-configured to install Great Expectations within the Airflow container environment.
+- This ensures that all data validation logic and dependencies are available when Airflow runs the ingestion and validation DAGs.
+- The project mounts the Great Expectations configuration and expectation suites inside the Airflow container, enabling seamless execution of validation checkpoints as part of the workflow.
+
+## Step 6: Setting Up Grafana (via Docker Compose)
+
+Grafana is pre-configured via `docker-compose.yml` — no manual installation required.
+
+- **URL**: [http://localhost:3001](http://localhost:3001)  
+- **Username**: `dsp`  
+- **Password**: `project`
+
+
+## Step 6: Running Airflow DAGs
 - Enable and trigger the `diabetes_ingestion_dag` and `prediction_job` dags.
 
-### Airflow DAG: `diabetes_ingestion_dag`
+✅ By following the above steps, you will have successfully set up the **Diabetes ML Prediction System** with automated data validation, real-time monitoring, and user-friendly prediction interfaces.
 
-- Picks a random `.csv` file from `raw_data/` folder
-- Validates with Great Expectations
-- Stores validation metrics in PostgreSQL
-- Sends Teams alerts if data quality is poor
-- Moves file to either `good_data/` or `bad_data/` based on results
+## 🔍  Role of Each Service
+### 🧑‍💻 User-Facing Services (On-Demand)
+These components allow manual user interaction, real-time prediction, and history lookup:
 
-### Airflow DAG: ``prediction_job`
-- Check any new `.csv` files in `good_data/` folder
-- Send those files to fastapi to make predictions
-
-## Streamlit Webapp
+## 1. Streamlit Webapp
 
 The Streamlit app provides an interactive UI for diabetes prediction with two main features:
 
@@ -319,7 +334,8 @@ The Streamlit app provides an interactive UI for diabetes prediction with two ma
 
 The app interacts with the FastAPI API endpoints (`/predict` and `/past-predictions`) to perform real-time predictions and retrieve stored data, providing a seamless user experience for diabetes risk assessment.
 
-## Model Training & FastAPI Backend
+
+## 2. Model Training & FastAPI Backend
 
 ### Model Training Script
 
@@ -343,17 +359,27 @@ The FastAPI backend exposes endpoints to make diabetes predictions and retrieve 
 - **Database Connection:** Uses a PostgreSQL connection pool for efficient data storage and retrieval.
 - **Background Tasks:** Inserts predictions into the database asynchronously to keep API responses fast and responsive.
 
-## Data Validation with Great Expectations
+## ⚙️ Automated Pipelines (Airflow Orchestration)
 
-- **Great Expectations (version 0.18.19)** to ensure high-quality, reliable data ingestion for diabetes prediction.
+These pipelines run automatically and handle data ingestion, validation, and prediction:
 
-### Setting up Great Expectations with Airflow and Docker
+### 1. The following Airflow DAGs automate the entire backend workflow: 
 
-- The `Dockerfile` and accompanying `requirements.txt` are pre-configured to install Great Expectations within the Airflow container environment.
-- This ensures that all data validation logic and dependencies are available when Airflow runs the ingestion and validation DAGs.
-- The project mounts the Great Expectations configuration and expectation suites inside the Airflow container, enabling seamless execution of validation checkpoints as part of the workflow.
+### Airflow DAG 1: `diabetes_ingestion_dag`
 
-### What Great Expectations Does Here:
+- Picks a random `.csv` file from `raw_data/` folder
+- Validates with Great Expectations
+- Stores validation metrics in PostgreSQL
+- Sends Teams alerts if data quality is poor
+- Moves file to either `good_data/` or `bad_data/` based on results
+
+### Airflow DAG 2: ``prediction_job`
+- Check any new `.csv` files in `good_data/` folder
+- Send those files to fastapi to make predictions
+
+
+### 2. Data Validation with Great Expectations
+
 - Validates incoming data using a comprehensive expectation suite (`diabetes_data_suite.json`) that includes:
   - Checks for **null values** in critical columns (`age`, `gender`, `blood_glucose_level`, `hbA1c_level`).
   - Verifies **data types** (int, float) for numeric columns.
@@ -379,21 +405,62 @@ The FastAPI backend exposes endpoints to make diabetes predictions and retrieve 
 - `training_data` – Used as baseline for drift detection
 - `processed_files` – Prevents reprocessing of already-ingested files
 
-## Grafana Dashboards
 
-### 1. Ingested Data Monitoring Dashboard
+## 📊 Grafana Dashboards
 
-- **Invalid Rows Percentage Gauge** – Shows latest invalid % from ingestion
-- **Valid vs Invalid Row Trends** – Compares recent ingestion batch quality
-- **Missing Value % Drift** – Tracks missing data over time
-- **Error Categories Breakdown** – Displays error counts by category (missing, type, range, etc.)
-- **Missing Values Distribution** – Shows breakdown of missing fields like age, gender, etc.
+### Monitoring Dashboards for Data Quality and Model Performance
 
-### 2. Data Drift & Prediction Issues Dashboard
+Effective monitoring of both data ingestion quality and model predictive performance is essential for maintaining the reliability and robustness of machine learning systems in production. This documentation outlines two complementary dashboards designed to provide comprehensive observability over data and model health.
 
-- **Prediction Class Distribution** – Bar chart of Yes/No prediction counts
-- **Age Drift vs Training Data** – Line chart showing % drift in age compared to training average
+---
 
+## 1. Ingested Data Quality Monitoring Dashboard
+
+This dashboard provides real-time insights into the quality and integrity of incoming data streams. Monitoring these metrics facilitates early detection of data anomalies that may compromise downstream predictive accuracy.
+
+- **Invalid Rows Percentage Gauge**  
+  Displays the proportion of invalid rows within the last 10-minute ingestion window.  
+  **Purpose:** Quickly identifies bad or incomplete patient records so they can be fixed before affecting predictions.
+
+- **Valid vs Invalid Row Trends**  
+  Temporal visualization of counts of valid versus invalid records across recent ingestion batches.  
+  **Purpose:** Helps track if data quality is improving or getting worse over time.
+
+- **Missing Value Percentage Drift**  
+  Measures the percentage of missing values aggregated over 10-minute intervals across the past 24 hours.  
+  **Purpose:** Tracks missing data in key features like blood glucose or HbA1c, which are important for diabetes prediction.
+
+- **Error Category Breakdown**  
+  Categorical distribution of ingestion errors over the past hour, encompassing missing values, type mismatches, range violations, and format errors.  
+  **Purpose:** Categorizing error types directs and helps focus on fixing the most common data problems.
+
+- **Missing Values Distribution**  
+  Feature-level aggregation of missing value counts within the most recent 30-minute period.  
+  **Purpose:** Identifies which specific features suffer from data gaps, informing feature-specific data quality improvements.
+
+---
+
+## 2. Data Drift and Model Prediction Monitoring Dashboard
+
+This dashboard tracks key indicators of model input drift and predictive performance, enabling the detection of degradation and informing model maintenance decisions.
+
+- **Prediction Class Distribution**  
+  Distribution of predicted classes ("Yes" vs "No") within the last hour.  
+  **Purpose:** Monitoring class prediction ratios assists in detecting shifts in input data distribution or model bias.
+
+- **Age Feature Drift Relative to Training Data**  
+  Percentage deviation of average predicted age (calculated in 30-minute intervals) compared to the training dataset mean.  
+  **Purpose:** Helps identify changes in the patient population that might affect the model’s accuracy since age is an important factor.
+
+- **Model Confidence Score Over Time**  
+  Average confidence of model predictions aggregated over 30-minute intervals.  
+  **Purpose:** Lower confidence might indicate the model is less certain due to new or different patient data..
+
+- **Model Accuracy Over Time**  
+  Hourly aggregated accuracy metric derived by comparing predicted labels to actual ground truth.  
+  **Purpose:** Measures how well the model is performing with real data, which is key to trusting its predictions.
+
+---
 - Grafana queries for all these graphs are provided in a separate `grafana_queries.sql` file.
 
 
@@ -406,8 +473,9 @@ The FastAPI backend exposes endpoints to make diabetes predictions and retrieve 
 
 
 ## Conclusion
+Thank you for checking out this project! This project provides a complete, automated diabetes prediction system with reliable data validation, real-time monitoring, and user-friendly interfaces. It demonstrates a practical approach to deploying trustworthy machine learning solutions in healthcare.
 
-Thank you for checking out this project! It offers a practical and modular approach to building and deploying ML-driven applications with robust data quality and monitoring. Contributions and feedback are welcome!
+Contributions and feedback are welcome!
 
 
 
