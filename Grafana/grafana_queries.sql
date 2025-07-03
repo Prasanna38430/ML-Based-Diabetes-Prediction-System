@@ -87,3 +87,17 @@ FROM (
 ) AS missing_errors
 GROUP BY error_type
 ORDER BY total_errors DESC;
+
+
+-- ===============================
+-- Data Drift and Prediction Issues Dashboard
+-- ===============================
+ 
+-- Prediction Class Distribution (Last 1 Hour)
+SELECT
+  diabetes_prediction AS prediction_class,
+  COUNT(*) AS count_of_predictions
+FROM predictions
+WHERE prediction_date >= NOW() - INTERVAL '1 hour'
+GROUP BY diabetes_prediction;
+ 
