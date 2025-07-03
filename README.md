@@ -415,11 +415,11 @@ These pipelines run automatically and handle data ingestion, validation, and pre
 
 ### Monitoring Dashboards for Data Quality and Model Performance
 
-Effective monitoring of both data ingestion quality and model predictive performance is essential for maintaining the reliability and robustness of machine learning systems in production. This documentation outlines two complementary dashboards designed to provide comprehensive observability over data and model health.
+Effective monitoring of both data ingestion quality and model predictive performance is essential for maintaining the reliability and robustness of machine learning systems in production. 
 
 ---
 
-## 1. Ingested Data Quality Monitoring Dashboard
+### 1. Ingested Data Quality Monitoring Dashboard
 
 This dashboard provides real-time insights into the quality and integrity of incoming data streams. Monitoring these metrics facilitates early detection of data anomalies that may compromise downstream predictive accuracy.
 
@@ -445,7 +445,7 @@ This dashboard provides real-time insights into the quality and integrity of inc
 
 ---
 
-## 2. Data Drift and Model Prediction Monitoring Dashboard
+### 2. Data Drift and Model Prediction Monitoring Dashboard
 
 This dashboard tracks key indicators of model input drift and predictive performance, enabling the detection of degradation and informing model maintenance decisions.
 
@@ -468,18 +468,25 @@ This dashboard tracks key indicators of model input drift and predictive perform
 ---
 - Grafana queries for all these graphs are provided in a separate `grafana_queries.sql` file.
 
+### 3. Grafana Alerts:
+- Alerts monitor critical metrics such as data ingestion quality, prediction class balance, and model accuracy.
+- They notify the team immediately about data errors, imbalanced predictions, or declining model performance.
+- Proactive alerting helps maintain system reliability and enables timely corrective actions.
+
 
 ## Contributors
-**Prasanna Kumar ADABALA**
-**Mouna Priya Pokuru**
-**Raghuram Munagala**
-**Bhargavi Akula**
-**Nithin Naga Sai Gajula**
+- **Prasanna Kumar ADABALA**
+- **Mouna Priya Pokuru**
+- **Raghuram Munagala**
+- **Bhargavi Akula**
+- **Nithin Naga Sai Gajula**
 
 
 ## Conclusion
 
-Thank you for checking out this project! It offers a practical and modular approach to building and deploying ML-driven applications with robust data quality and monitoring. Contributions and feedback are welcome!
+Thank you for checking out this project! This project provides a complete, automated diabetes prediction system with reliable data validation, real-time monitoring, and user-friendly interfaces. It demonstrates a practical approach to deploying trustworthy machine learning solutions in healthcare.
+
+Contributions and feedback are welcome!
 
 
 
