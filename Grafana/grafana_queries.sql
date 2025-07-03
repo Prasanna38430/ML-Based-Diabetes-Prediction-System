@@ -69,3 +69,21 @@ UNION ALL
 SELECT 'Missing Columns', SUM(missing_heart_disease_column)
 FROM diabetes_data_ingestion_stats
 WHERE created_on >= NOW() - INTERVAL '1 hour';
+
+
+-- Missing Values Distribution by Feature (Last 30 Minutes)
+SELECT error_type, SUM(error_count) AS total_errors
+FROM (
+  SELECT created_on, error_type, error_count
+  FROM diabetes_data_ingestion_stats,
+  LATERAL (VALUES
+    ('missing_age', missing_age),
+    ('missing_blood_glucose_level', missing_blood_glucose_level),
+    ('missing_gender', missing_gender),
+    ('missing_hbA1c_level', missing_hbA1c_level),
+    ('missing_heart_disease_column', missing_heart_disease_column)
+  ) AS errors(error_type, error_count)
+  WHERE created_on >= NOW() - INTERVAL '30 minutes'
+) AS missing_errors
+GROUP BY error_type
+ORDER BY total_errors DESC;
