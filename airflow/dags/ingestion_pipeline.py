@@ -31,31 +31,60 @@ def diabetes_ingestion_dag():
         if not files:
             raise AirflowSkipException("No CSV files found in raw-data folder")
         return os.path.join(RAW_DATA_DIR, random.choice(files))
- 
-# Task 2: Save the file by moving it to the good-data folder
-def save_file(**kwargs):
-    file_path = kwargs['ti'].xcom_pull(task_ids='read-data')
-   
-    if not file_path:
-        print("No file selected. Skipping save-file task.")
-        return  
- 
-    destination_path = os.path.join(GOOD_DATA_PATH, os.path.basename(file_path))
-    shutil.move(file_path, destination_path)
-    print(f"File moved: {file_path} → {destination_path}")
- 
 
-read_task = PythonOperator(
-    task_id='read-data',
-    python_callable=read_data,
-    dag=dag,
-)
- 
-save_task = PythonOperator(
-    task_id='save-file',
-    python_callable=save_file,
-    provide_context=True,  
-    dag=dag,
-)
- 
-read_task >> save_task
+    @task(task_id="validate_data")
+    def validate_data(filepath: str) -> dict:
+        from airflow.exceptions import AirflowFailException
+        import pandas as pd
+        import great_expectations as gx
+        from great_expectations.datasource.fluent import BatchRequest
+        from datetime import datetime
+        
+        try:
+            
+            context = gx.get_context(context_root_dir=GE_DATA_CONTEXT_ROOT)
+
+            
+            df = pd.read_csv(filepath)
+            total_rows = len(df)
+
+            
+            if "diabetes_datasource" not in context.datasources:
+                datasource = context.sources.add_pandas(name="diabetes_datasource")
+            else:
+                datasource = context.datasources["diabetes_datasource"]
+
+        
+            if "diabetes_asset" in datasource.get_asset_names():
+                datasource.delete_asset("diabetes_asset")
+
+            
+            asset = datasource.add_csv_asset(name="diabetes_asset", filepath_or_buffer=filepath)
+
+            
+            batch_request = BatchRequest(
+                datasource_name="diabetes_datasource",
+                data_asset_name="diabetes_asset",
+                options={}
+            )
+
+           
+            try:
+                suite = context.get_expectation_suite(SUITE_NAME)
+            except gx.exceptions.DataContextError:
+                suite = context.add_expectation_suite(SUITE_NAME)
+
+           
+            validator = context.get_validator(
+                batch_request=batch_request,
+                expectation_suite=suite
+            )
+
+            
+            result = validator.validate()
+            context.build_data_docs()
+
+            return _process_validation_results(result, filepath, total_rows)
+
+        except Exception as e:
+            raise AirflowFailException(f"Validation failed: {str(e)}")
