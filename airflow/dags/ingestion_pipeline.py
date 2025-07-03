@@ -1,35 +1,36 @@
 import os
 import random
-import shutil
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from datetime import datetime
- 
-# Define paths for raw-data and good-data folders
-RAW_DATA_PATH = "/opt/airflow/data/raw_data"
-GOOD_DATA_PATH = "/opt/airflow/data/good_data"
- 
+from datetime import datetime, timedelta
+from airflow.decorators import dag, task
+from airflow.utils.dates import days_ago
+from airflow.exceptions import AirflowFailException, AirflowSkipException
 
-dag = DAG(
-    'simple_ingestion_pipeline',
-    description='Ingest data from raw-data to good-data',
-    schedule_interval='*/1 * * * *',  
-    start_date=datetime(2025, 3, 5),
+
+PROJECT_ROOT = "/opt/airflow"
+RAW_DATA_DIR = os.path.join(PROJECT_ROOT, "data", "raw_data")
+GOOD_DATA_DIR = os.path.join(PROJECT_ROOT, "data", "good_data")
+BAD_DATA_DIR = os.path.join(PROJECT_ROOT, "data", "bad_data")
+GE_DATA_CONTEXT_ROOT = os.path.join(PROJECT_ROOT, "great_expectations")
+SUITE_NAME = "diabetes_data_suite"
+
+@dag(
+    dag_id="diabetes_ingestion_dag",
+    description="Diabetes data ingestion and validation pipeline",
+    schedule_interval=timedelta(minutes=2),
+    start_date=days_ago(1),
     catchup=False,
+    max_active_runs=1,
+    tags=["diabetes", "validation", "data-quality"],
 )
- 
-# Task 1: Read one file randomly from the raw-data folder
-def read_data():
-    files = [f for f in os.listdir(RAW_DATA_PATH) if os.path.isfile(os.path.join(RAW_DATA_PATH, f))]
- 
-    if not files:
-        print("No files found in raw-data folder. Skipping execution.")
-        return None  
- 
-    selected_file = random.choice(files)
-    file_path = os.path.join(RAW_DATA_PATH, selected_file)
-    print(f"Selected file: {file_path}")
-    return file_path
+def diabetes_ingestion_dag():
+
+    @task(task_id="read_data")
+    def read_data() -> str:
+        """Select random CSV file from raw data directory"""
+        files = [f for f in os.listdir(RAW_DATA_DIR) if f.endswith(".csv")]
+        if not files:
+            raise AirflowSkipException("No CSV files found in raw-data folder")
+        return os.path.join(RAW_DATA_DIR, random.choice(files))
  
 # Task 2: Save the file by moving it to the good-data folder
 def save_file(**kwargs):
