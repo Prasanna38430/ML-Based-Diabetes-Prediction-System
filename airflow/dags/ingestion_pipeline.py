@@ -195,3 +195,102 @@ def _process_validation_results(result, filepath, total_rows):
             "created_on": datetime.now().isoformat(),
             "bad_row_indices": sorted(bad_rows) if not table_level_error else list(range(total_rows)),
         }
+        @task(task_id="save_statistics")
+        def save_statistics(results: dict) -> None:
+            """Save validation statistics to database"""
+            from airflow.providers.postgres.hooks.postgres import PostgresHook
+            from airflow.exceptions import AirflowFailException
+
+            conn = None
+            cursor = None
+            try:
+                hook = PostgresHook(postgres_conn_id="postgres_dsp")
+                conn = hook.get_conn()
+                cursor = conn.cursor()
+
+                query = """
+                    INSERT INTO diabetes_data_ingestion_stats (
+                        file_name, total_rows, valid_rows, invalid_rows,
+                        missing_age, missing_blood_glucose_level, missing_gender, missing_hbA1c_level,
+                        invalid_gender, age_out_of_range, bmi_out_of_range,
+                        invalid_age_type, invalid_blood_glucose_level_type, invalid_bmi_type,
+                        hbA1c_level_format_errors, missing_heart_disease_column,
+                        median_age_out_of_range, median_bmi_out_of_range,
+                        criticality, error_summary, created_on
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                ec = results["error_counts"]
+                cursor.execute(query, (
+                    os.path.basename(results["filepath"]),
+                    results["total_rows"],
+                    results["valid_rows"],
+                    results["invalid_rows"],
+                    ec["missing_age"],
+                    ec["missing_blood_glucose_level"],
+                    ec["missing_gender"],
+                    ec["missing_hbA1c_level"],
+                    ec["invalid_gender"],
+                    ec["age_out_of_range"],
+                    ec["bmi_out_of_range"],
+                    ec["invalid_age_type"],
+                    ec["invalid_blood_glucose_level_type"],
+                    ec["invalid_bmi_type"],
+                    ec["hbA1c_level_format_errors"],
+                    ec["missing_heart_disease_column"],
+                    ec["median_age_out_of_range"],
+                    ec["median_bmi_out_of_range"],
+                    results["criticality"],
+                    results["errors_summary"],
+                    results["created_on"],
+                ))
+                conn.commit()
+            except Exception as e:
+                raise AirflowFailException(f"Database error: {str(e)}")
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+
+       
+        @task(task_id="save_files")
+        def save_files(results: dict) -> None:
+            """Save good/bad data files"""
+            import pandas as pd
+
+            try:
+                df = pd.read_csv(results["filepath"])
+                base_name = os.path.basename(results["filepath"])
+                
+                if results["invalid_rows"] == 0:
+                    # Save all rows to GOOD_DATA_DIR
+                    df.to_csv(os.path.join(GOOD_DATA_DIR, base_name), index=False)
+                elif results["valid_rows"] == 0:
+                    # Save all rows to BAD_DATA_DIR
+                    df.to_csv(os.path.join(BAD_DATA_DIR, base_name), index=False)
+                else:
+                    # Split good and bad rows
+                    good_indices = [i for i in range(len(df)) if i not in results["bad_row_indices"]]
+                    good_df = df.iloc[good_indices]
+                    bad_df = df.iloc[results["bad_row_indices"]]
+                    if not good_df.empty:
+                        good_df.to_csv(os.path.join(GOOD_DATA_DIR, base_name), index=False)
+                    if not bad_df.empty:
+                        bad_df.to_csv(os.path.join(BAD_DATA_DIR, base_name), index=False)
+                
+                os.remove(results["filepath"])
+            except Exception as e:
+                raise AirflowFailException(f"File operation failed: {str(e)}")
+
+        # DAG structure
+        data_file = read_data()
+        validation_results = validate_data(data_file)
+        
+        data_file >> validation_results >> [
+            send_alerts(validation_results),
+            save_files(validation_results),
+            save_statistics(validation_results)
+        ]
+
+    # Instantiate the DAG
+    diabetes_ingestion_dag = diabetes_ingestion_dag()
