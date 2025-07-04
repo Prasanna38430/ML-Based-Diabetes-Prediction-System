@@ -1,29 +1,36 @@
 import pandas as pd
 import os
  
-input_file = './airflow/data/diabetes_dataset.csv'
+def split_by_num_files(df, output_base_dir, base_name, num_files):
+    total_rows = len(df)
+    base_chunk_size = total_rows // num_files
+    remainder = total_rows % num_files
  
-base_name = os.path.splitext(os.path.basename(input_file))[0]
+    start_idx = 0
+    for chunk_num in range(num_files):
+        # Distribute remainder one row per chunk starting from first chunk
+        current_chunk_size = base_chunk_size + (1 if chunk_num < remainder else 0)
+        end_idx = start_idx + current_chunk_size
  
-df = pd.read_csv(input_file)
+        chunk = df.iloc[start_idx:end_idx]
  
-raw_data_folder = '../airflow/data/data/raw_data'
+        output_file = os.path.join(output_base_dir, f'{base_name}_chunk_{chunk_num + 1}.csv')
+        chunk.to_csv(output_file, index=False)
+        print(f"Saved: {output_file} with {len(chunk)} rows")
  
-os.makedirs(raw_data_folder, exist_ok=True)
+        start_idx = end_idx
  
-num_files = 4000  
+# Input files
+input_files = [
+    ('./airflow/data/generated_errors/diabetes_data_with_errors.csv', 20),
+    ('./airflow/data/generated_errors/diabetes_data2_with_errors.csv', 3800)
+]
  
-# Calculate the chunk size based on the number of files
-chunk_size = len(df) // num_files
-if len(df) % num_files != 0:
-    chunk_size += 1  # Ensure the last file contains any remaining rows
+output_base_dir = './airflow/data/raw_data'
+os.makedirs(output_base_dir, exist_ok=True)
  
-# Split the DataFrame into the desired number of files
-chunk_files = []
-for i in range(0, len(df), chunk_size):
-    chunk = df.iloc[i:i+chunk_size]
-    output_file = os.path.join(raw_data_folder, f'{base_name}_chunk_{i//chunk_size + 1}.csv')
-    chunk.to_csv(output_file, index=False)
-    chunk_files.append(output_file)  # Keep track of the file paths
-    print(f"Saved: {output_file}")
+for input_file, num_files in input_files:
+    base_name = os.path.splitext(os.path.basename(input_file))[0]
+    df = pd.read_csv(input_file)
  
+    split_by_num_files(df, output_base_dir, base_name, num_files)

@@ -2,7 +2,11 @@ version: '3.8'
 
 x-airflow-common:
   &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.5}
+  build:
+    context: ./airflow
+    dockerfile: Dockerfile
+
+  # image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.5}
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -14,12 +18,18 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__WEBSERVER__BASE_URL: http://airflow-webserver:8080
+  
   volumes:
-    - ${AIRFLOW_PROJ_DIR:-./airflow}/dags:/opt/airflow/dags
-    - ${AIRFLOW_PROJ_DIR:-./airflow}/logs:/opt/airflow/logs
-    - ${AIRFLOW_PROJ_DIR:-./airflow}/config:/opt/airflow/config
-    - ${AIRFLOW_PROJ_DIR:-./airflow}/plugins:/opt/airflow/plugins
-    - ${AIRFLOW_PROJ_DIR:-./airflow}/data:/opt/airflow/data
+  - ${AIRFLOW_PROJ_DIR:-./airflow}/dags:/opt/airflow/dags
+  - ${AIRFLOW_PROJ_DIR:-./airflow}/logs:/opt/airflow/logs
+  - ${AIRFLOW_PROJ_DIR:-./airflow}/config:/opt/airflow/config
+  - ${AIRFLOW_PROJ_DIR:-./airflow}/plugins:/opt/airflow/plugins
+  - ${AIRFLOW_PROJ_DIR:-./airflow}/data:/opt/airflow/data
+  - ${AIRFLOW_PROJ_DIR:-./airflow}/great_expectations:/opt/airflow/great_expectations
+ 
+  
+
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     redis:
@@ -33,13 +43,14 @@ services:
     image: postgres:13
     container_name: fastapi_db
     environment:
-      POSTGRES_USER: your_username
-      POSTGRES_PASSWORD: your_password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: piggy
       POSTGRES_DB: diabetes_predictions
     ports:
       - "5432:5432"
     volumes:
       - fastapi_postgres_data:/var/lib/postgresql/data
+      - ./train_data:/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d diabetes_predictions"]
       interval: 5s
@@ -227,10 +238,36 @@ services:
     networks:
       - airflow-network
       - shared-network
+  ge-docs-server:
+    image: nginx:alpine
+    container_name: ge_docs_server
+    ports:
+      - "8085:80"
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-./airflow}/great_expectations/uncommitted/data_docs/local_site:/usr/share/nginx/html:ro
+    networks:
+      - shared-network
+  
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=dsp
+      - GF_SECURITY_ADMIN_PASSWORD=project
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - shared-network
+    depends_on:
+      - db  
+
 
 volumes:
   fastapi_postgres_data:
   airflow_postgres_data:
+  grafana-storage:
 
 networks:
   app-network:

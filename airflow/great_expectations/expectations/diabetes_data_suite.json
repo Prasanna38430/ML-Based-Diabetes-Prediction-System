@@ -1,0 +1,112 @@
+{
+  "expectation_suite_name": "diabetes_data_suite",
+  "expectations": [
+
+    
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "age" }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "blood_glucose_level" }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "gender" }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "hbA1c_level" }
+    },
+
+    
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "gender",
+        "value_set": ["Male", "Female", "Other"]
+      }
+    },
+
+    
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "age",
+        "min_value": 0,
+        "max_value": 120
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "bmi",
+        "min_value": 10,
+        "max_value": 70
+      }
+    },
+
+    
+    {
+      "expectation_type": "expect_column_values_to_be_in_type_list",
+      "kwargs": {
+        "column": "age",
+        "type_list": ["int", "float"]
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_type_list",
+      "kwargs": {
+        "column": "blood_glucose_level",
+        "type_list": ["int", "float"]
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_type_list",
+      "kwargs": {
+        "column": "bmi",
+        "type_list": ["float", "int"]
+      }
+    },
+
+   
+    {
+      "expectation_type": "expect_column_values_to_match_regex",
+      "kwargs": {
+        "column": "hbA1c_level",
+        "regex": "^[0-9]+(\\.[0-9]+)?$"
+      }
+    },
+
+    
+    {
+      "expectation_type": "expect_column_to_exist",
+      "kwargs": {
+        "column": "heart_disease"
+      }
+    },
+
+    
+    {
+      "expectation_type": "expect_column_median_to_be_between",
+      "kwargs": {
+        "column": "age",
+        "min_value": 20,
+        "max_value": 60
+      }
+    },
+    {
+      "expectation_type": "expect_column_median_to_be_between",
+      "kwargs": {
+        "column": "bmi",
+        "min_value": 15,
+        "max_value": 40
+      }
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "great_expectations_version": "0.18.19"
+  }
+}
