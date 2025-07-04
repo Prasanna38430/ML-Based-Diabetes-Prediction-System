@@ -88,7 +88,8 @@ def diabetes_ingestion_dag():
 
         except Exception as e:
             raise AirflowFailException(f"Validation failed: {str(e)}")
-def _process_validation_results(result, filepath, total_rows):
+
+    def _process_validation_results(result, filepath, total_rows):
         """Process GE validation results into standardized format"""
         import pandas as pd
         vr = result.to_json_dict()
@@ -195,102 +196,186 @@ def _process_validation_results(result, filepath, total_rows):
             "created_on": datetime.now().isoformat(),
             "bad_row_indices": sorted(bad_rows) if not table_level_error else list(range(total_rows)),
         }
-        @task(task_id="save_statistics")
-        def save_statistics(results: dict) -> None:
-            """Save validation statistics to database"""
-            from airflow.providers.postgres.hooks.postgres import PostgresHook
-            from airflow.exceptions import AirflowFailException
 
-            conn = None
-            cursor = None
+    @task(task_id="save_statistics")
+    def save_statistics(results: dict) -> None:
+        """Save validation statistics to database"""
+        from airflow.providers.postgres.hooks.postgres import PostgresHook
+        from airflow.exceptions import AirflowFailException
+
+        conn = None
+        cursor = None
+        try:
+            hook = PostgresHook(postgres_conn_id="postgres_dsp")
+            conn = hook.get_conn()
+            cursor = conn.cursor()
+
+            query = """
+                INSERT INTO diabetes_data_ingestion_stats (
+                    file_name, total_rows, valid_rows, invalid_rows,
+                    missing_age, missing_blood_glucose_level, missing_gender, missing_hbA1c_level,
+                    invalid_gender, age_out_of_range, bmi_out_of_range,
+                    invalid_age_type, invalid_blood_glucose_level_type, invalid_bmi_type,
+                    hbA1c_level_format_errors, missing_heart_disease_column,
+                    median_age_out_of_range, median_bmi_out_of_range,
+                    criticality, error_summary, created_on
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            ec = results["error_counts"]
+            cursor.execute(query, (
+                os.path.basename(results["filepath"]),
+                results["total_rows"],
+                results["valid_rows"],
+                results["invalid_rows"],
+                ec["missing_age"],
+                ec["missing_blood_glucose_level"],
+                ec["missing_gender"],
+                ec["missing_hbA1c_level"],
+                ec["invalid_gender"],
+                ec["age_out_of_range"],
+                ec["bmi_out_of_range"],
+                ec["invalid_age_type"],
+                ec["invalid_blood_glucose_level_type"],
+                ec["invalid_bmi_type"],
+                ec["hbA1c_level_format_errors"],
+                ec["missing_heart_disease_column"],
+                ec["median_age_out_of_range"],
+                ec["median_bmi_out_of_range"],
+                results["criticality"],
+                results["errors_summary"],
+                results["created_on"],
+            ))
+            conn.commit()
+        except Exception as e:
+            raise AirflowFailException(f"Database error: {str(e)}")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @task(task_id="send_alerts")
+    def send_alerts(results: dict) -> None:
+        """Send validation alerts to Teams"""
+        import requests
+        import great_expectations as gx
+        from airflow.models import Variable
+        from airflow.exceptions import AirflowFailException
+        import logging
+        import os
+        import glob
+
+        try:
+            # Attempt to get the webhook URL, with a fallback
             try:
-                hook = PostgresHook(postgres_conn_id="postgres_dsp")
-                conn = hook.get_conn()
-                cursor = conn.cursor()
+                webhook_url = Variable.get("TEAMS_WEBHOOK_URL")
+            except KeyError:
+                logging.warning("TEAMS_WEBHOOK_URL variable not found. Skipping alert.")
+                return  # Skip sending alert if variable is missing
 
-                query = """
-                    INSERT INTO diabetes_data_ingestion_stats (
-                        file_name, total_rows, valid_rows, invalid_rows,
-                        missing_age, missing_blood_glucose_level, missing_gender, missing_hbA1c_level,
-                        invalid_gender, age_out_of_range, bmi_out_of_range,
-                        invalid_age_type, invalid_blood_glucose_level_type, invalid_bmi_type,
-                        hbA1c_level_format_errors, missing_heart_disease_column,
-                        median_age_out_of_range, median_bmi_out_of_range,
-                        criticality, error_summary, created_on
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                ec = results["error_counts"]
-                cursor.execute(query, (
-                    os.path.basename(results["filepath"]),
-                    results["total_rows"],
-                    results["valid_rows"],
-                    results["invalid_rows"],
-                    ec["missing_age"],
-                    ec["missing_blood_glucose_level"],
-                    ec["missing_gender"],
-                    ec["missing_hbA1c_level"],
-                    ec["invalid_gender"],
-                    ec["age_out_of_range"],
-                    ec["bmi_out_of_range"],
-                    ec["invalid_age_type"],
-                    ec["invalid_blood_glucose_level_type"],
-                    ec["invalid_bmi_type"],
-                    ec["hbA1c_level_format_errors"],
-                    ec["missing_heart_disease_column"],
-                    ec["median_age_out_of_range"],
-                    ec["median_bmi_out_of_range"],
-                    results["criticality"],
-                    results["errors_summary"],
-                    results["created_on"],
-                ))
-                conn.commit()
-            except Exception as e:
-                raise AirflowFailException(f"Database error: {str(e)}")
-            finally:
-                if cursor:
-                    cursor.close()
-                if conn:
-                    conn.close()
+            # Load Great Expectations context
+            context = gx.get_context(context_root_dir=GE_DATA_CONTEXT_ROOT)
 
-       
-        @task(task_id="save_files")
-        def save_files(results: dict) -> None:
-            """Save good/bad data files"""
-            import pandas as pd
-
+            # Get data docs URLs from configured sites
+            docs_url = "http://localhost:8085/validation_results.html"  # Default fallback
             try:
-                df = pd.read_csv(results["filepath"])
-                base_name = os.path.basename(results["filepath"])
-                
-                if results["invalid_rows"] == 0:
-                    # Save all rows to GOOD_DATA_DIR
-                    df.to_csv(os.path.join(GOOD_DATA_DIR, base_name), index=False)
-                elif results["valid_rows"] == 0:
-                    # Save all rows to BAD_DATA_DIR
-                    df.to_csv(os.path.join(BAD_DATA_DIR, base_name), index=False)
-                else:
-                    # Split good and bad rows
-                    good_indices = [i for i in range(len(df)) if i not in results["bad_row_indices"]]
-                    good_df = df.iloc[good_indices]
-                    bad_df = df.iloc[results["bad_row_indices"]]
-                    if not good_df.empty:
-                        good_df.to_csv(os.path.join(GOOD_DATA_DIR, base_name), index=False)
-                    if not bad_df.empty:
-                        bad_df.to_csv(os.path.join(BAD_DATA_DIR, base_name), index=False)
-                
-                os.remove(results["filepath"])
+                # Rebuild data docs to ensure latest validation results are included
+                context.build_data_docs()
+                # Access data docs sites from context configuration
+                sites = context.get_config().data_docs_sites
+                if sites:
+                    for site_name, site_config in sites.items():
+                        if "validation_result" in site_name.lower() or "local_site" in site_name.lower():
+                            base_url = site_config.get("site_url", docs_url)
+                            # Find the latest validation result for the file
+                            batch_identifier = os.path.basename(results["filepath"]).replace(".csv", "")
+                            validation_glob = f"{GE_DATA_CONTEXT_ROOT}/uncommitted/data_docs/local_site/validations/{SUITE_NAME}/*/{batch_identifier}/validation_result.html"
+                            validation_files = glob.glob(validation_glob)
+                            if validation_files:
+                                latest_validation = max(validation_files, key=os.path.getmtime)
+                                validation_path = latest_validation.replace(f"{GE_DATA_CONTEXT_ROOT}/uncommitted/data_docs/local_site/", "")
+                                docs_url = f"{base_url.rstrip('/')}/{validation_path}"
+                                break
+                logging.info(f"Data docs URL: {docs_url}")
             except Exception as e:
-                raise AirflowFailException(f"File operation failed: {str(e)}")
+                logging.warning(f"Failed to retrieve data docs URL: {str(e)}. Using fallback URL: {docs_url}")
 
-        # DAG structure
-        data_file = read_data()
-        validation_results = validate_data(data_file)
-        
-        data_file >> validation_results >> [
-            send_alerts(validation_results),
-            save_files(validation_results),
-            save_statistics(validation_results)
-        ]
+            alert = {
+                "type": "message",
+                "attachments": [{
+                    "contentType": "application/vnd.microsoft.card.adaptive",
+                    "content": {
+                        "type": "AdaptiveCard",
+                        "version": "1.0",
+                        "body": [
+                            {"type": "TextBlock", "text": "Diabetes Data Validation", "weight": "bolder", "size": "medium"},
+                            {"type": "TextBlock", "text": f"File: {os.path.basename(results['filepath'])}"},
+                            {"type": "TextBlock", "text": f"Status: {results['criticality'].upper()} ({results['invalid_rows']}/{results['total_rows']} issues)"},
+                            {"type": "TextBlock", "text": "Issues:", "weight": "bolder"},
+                            {"type": "TextBlock", "text": results["errors_summary"], "wrap": True}
+                        ],
+                        "actions": [{
+                            "type": "Action.OpenUrl",
+                            "title": "View Details",
+                            "url": docs_url
+                        }]
+                    }
+                }]
+            }
 
-    # Instantiate the DAG
-    diabetes_ingestion_dag = diabetes_ingestion_dag()
+            for _ in range(3):  # Retry up to 3 times
+                try:
+                    response = requests.post(webhook_url, json=alert, timeout=10)
+                    if response.status_code == 200:
+                        logging.info("Successfully sent alert to Teams.")
+                        return
+                    else:
+                        logging.warning(f"Teams webhook request failed with status {response.status_code}: {response.text}")
+                except requests.RequestException as e:
+                    logging.warning(f"Attempt to send alert failed: {str(e)}")
+                    continue
+            raise Exception("Failed to send alert after 3 attempts")
+        except Exception as e:
+            raise AirflowFailException(f"Alert failed: {str(e)}")
+
+    @task(task_id="save_files")
+    def save_files(results: dict) -> None:
+        """Save good/bad data files"""
+        import pandas as pd
+
+        try:
+            df = pd.read_csv(results["filepath"])
+            base_name = os.path.basename(results["filepath"])
+            
+            if results["invalid_rows"] == 0:
+                # Save all rows to GOOD_DATA_DIR
+                df.to_csv(os.path.join(GOOD_DATA_DIR, base_name), index=False)
+            elif results["valid_rows"] == 0:
+                # Save all rows to BAD_DATA_DIR
+                df.to_csv(os.path.join(BAD_DATA_DIR, base_name), index=False)
+            else:
+                # Split good and bad rows
+                good_indices = [i for i in range(len(df)) if i not in results["bad_row_indices"]]
+                good_df = df.iloc[good_indices]
+                bad_df = df.iloc[results["bad_row_indices"]]
+                if not good_df.empty:
+                    good_df.to_csv(os.path.join(GOOD_DATA_DIR, base_name), index=False)
+                if not bad_df.empty:
+                    bad_df.to_csv(os.path.join(BAD_DATA_DIR, base_name), index=False)
+            
+            os.remove(results["filepath"])
+        except Exception as e:
+            raise AirflowFailException(f"File operation failed: {str(e)}")
+
+    # DAG structure
+    data_file = read_data()
+    validation_results = validate_data(data_file)
+    
+    data_file >> validation_results >> [
+        send_alerts(validation_results),
+        save_files(validation_results),
+        save_statistics(validation_results)
+    ]
+
+# Instantiate the DAG
+diabetes_ingestion_dag = diabetes_ingestion_dag()
