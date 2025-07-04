@@ -110,4 +110,31 @@ WHERE prediction_date >= NOW() - INTERVAL '24 hours'
   AND prediction_confidence IS NOT NULL
 GROUP BY 1
 ORDER BY 1;
+
+-- Age Feature Drift vs Training Data (Last 24 Hours)
+WITH training_avg AS (
+  SELECT AVG(age) AS base_age FROM training_data
+),
+pred_half_hourly AS (
+  SELECT 
+    date_trunc('hour', prediction_date) + 
+      INTERVAL '1 minute' * (FLOOR(EXTRACT(minute FROM prediction_date) / 30) * 30) AS time,
+    AVG(age) AS pred_age
+  FROM predictions
+  WHERE prediction_date >= NOW() - INTERVAL '24 hours'
+  GROUP BY time
+)
+SELECT 
+  p.time,
+  100 * (p.pred_age - t.base_age) / t.base_age AS drift_percentage
+FROM pred_half_hourly p, training_avg t
+ORDER BY p.time;
+
+-- Model Accuracy Over Time (Hourly)
+SELECT
+  date_trunc('hour', prediction_date) AS hour,
+  AVG(CASE WHEN diabetes_prediction = actual_label THEN 1 ELSE 0 END)::float AS accuracy
+FROM predictions
+GROUP BY hour
+ORDER BY hour;
  
