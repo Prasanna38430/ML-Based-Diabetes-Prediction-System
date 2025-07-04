@@ -100,4 +100,14 @@ SELECT
 FROM predictions
 WHERE prediction_date >= NOW() - INTERVAL '1 hour'
 GROUP BY diabetes_prediction;
+
+-- Model Prediction Confidence Over Time (Last 24 Hours)
+SELECT
+  date_trunc('minute', prediction_date) + INTERVAL '30 minutes' * FLOOR(EXTRACT(minute FROM prediction_date) / 30) AS "time",
+  AVG(prediction_confidence) AS model_prediction_average_confidence
+FROM predictions
+WHERE prediction_date >= NOW() - INTERVAL '24 hours'
+  AND prediction_confidence IS NOT NULL
+GROUP BY 1
+ORDER BY 1;
  
