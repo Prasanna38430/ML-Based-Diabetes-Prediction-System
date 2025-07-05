@@ -303,7 +303,7 @@ By following above steps, you will have successfully set up your PostgreSQL conn
 - This ensures that all data validation logic and dependencies are available when Airflow runs the ingestion and validation DAGs.
 - The project mounts the Great Expectations configuration and expectation suites inside the Airflow container, enabling seamless execution of validation checkpoints as part of the workflow.
 
-## Step 6: Setting Up Grafana (via Docker Compose)
+## Step 7: Setting Up Grafana (via Docker Compose)
 
 Grafana is pre-configured via `docker-compose.yml` — no manual installation required.
 
@@ -312,7 +312,7 @@ Grafana is pre-configured via `docker-compose.yml` — no manual installation re
 - **Password**: `project`
 
 
-## Step 7: Running Airflow DAGs
+## Step 8: Running Airflow DAGs
 - Enable and trigger the `diabetes_ingestion_dag` and `prediction_job` dags.
 
 ✅ By following the above steps, you will have successfully set up the **Diabetes ML Prediction System** with automated data validation, real-time monitoring, and user-friendly prediction interfaces.
