@@ -1,4 +1,4 @@
-# Dsp-ML-Based-Diabetes-App-Project
+# ML-Based-Diabetes-Prediction System
 
 # Project Setup
 
