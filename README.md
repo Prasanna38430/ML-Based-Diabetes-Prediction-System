@@ -140,8 +140,8 @@ AIRFLOW_UID=50000
 ## Step 2: Clone the Repository
 
 ```bash
-git clone https://github.com/Prasanna38430/Dsp-ML-Based-Daibetes-App-Project-G1.git
-cd Dsp-ML-Based-Daibetes-App-Project-G1
+git clone https://github.com/Prasanna38430/ML-Based-Daibetes-Prediction-System.git
+cd ML-Based-Daibetes-Prediction-System
 ```
 
 ## Step 3:  Start Services with Docker Compose
